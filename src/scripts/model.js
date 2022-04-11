@@ -61,7 +61,10 @@ export default class Model {
         const urlParams = new URLSearchParams(queryString);
         const id = urlParams.get('id');
 
-        if (!id) return;
+        const isMyProd = window.location.href.includes('winningpokerhud');
+        const isMyDev = window.location.href.includes('dev/replayer-riropo/wwwroot');
+
+        if (!id || !isMyProd || !isMyDev) return;
 
         const filePath = `${this.endPointPrefix}/php/riropo-load.php`;
 
@@ -219,10 +222,22 @@ export default class Model {
     /**
      * 
      * @param {string} sessionLog 
+     * @returns 
+     */
+    fixLogEdges(sessionLog) {
+
+        return sessionLog.trim();
+    }
+
+    /**
+     * 
+     * @param {string} sessionLog 
      */
     logValidation(sessionLog) {
 
         const room = value => {
+
+            if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|\t| Round #/.test(value)) return true;
 
             const starts = ['PokerStars ', 'Poker Hand #'];
 
@@ -394,11 +409,11 @@ export default class Model {
     }
 
 
-    transpileToPokerStars(log, fromDB) {
+    transpileToPokerStars(log, fromDB, hero) {
 
         if (fromDB) return log;
 
-        return easeTranspiler.transpile(log);
+        return easeTranspiler.transpile(log, hero);
     }
 
     getRoom() {

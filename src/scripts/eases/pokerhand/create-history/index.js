@@ -405,9 +405,13 @@ const conclusion = (lines, previousHistory) => {
 
     const conclusionLines = getConclusionLines(lines);
 
-    const { streetCards } = previousHistory;
+    // const { streetCards } = previousHistory;
 
     const histories = [];
+
+    // NOTE:: Prop `value` para passar como referencia na function boardRIT()
+    // RIT: run it twice, usado apenas nos logs bill
+    const streetCards = { value: previousHistory.streetCards };
 
     conclusionLines.forEach(line => {
 
@@ -423,6 +427,8 @@ const conclusion = (lines, previousHistory) => {
 
         phase ||= easeConclusion.collects(line, newPlayers);
 
+        phase ||= easeConclusion.boardRIT(line, streetCards);
+
         if (!phase) return;
 
         const isTeasing = phase === enums.phase.conclusionShowsTease;
@@ -436,7 +442,7 @@ const conclusion = (lines, previousHistory) => {
             player: null,
             line: line,
             lineIndex: null,
-            streetCards,
+            streetCards: streetCards.value,
             phase
         });
 

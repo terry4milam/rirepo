@@ -44,7 +44,7 @@ export default {
 
         if (hero.holeCards.inter) return;
 
-        const isPLO = hero.holeCards.length === 4;
+        const isPLO = hero.holeCards.length > 3;
 
         const { tableMax } = model.mainInfo;
 
@@ -59,7 +59,7 @@ export default {
         // NOTE:: usando ploPoint engloba logo hold'em e plo
         const noCards = this.context.getImageData(ploPoint.x, ploPoint.y, 95, 82);
 
-        const params = { isPLO, point, alpha: 0.8 };
+        const params = { isPLO, point, alpha: 0.8, cardsCount: hero.holeCards.length };
 
         const drawPlayerCardsAbsx = drawPlayerCards.call(this, params);
 

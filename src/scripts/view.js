@@ -9,6 +9,7 @@ import HandsList from "./controls/hand-list";
 import displayPositions from "./units/display-positions";
 import fns, { pointInRect } from "./units/fns";
 import CheckBox from "./controls/checkbox";
+import Controller from "./controller";
 
 export default class View {
 
@@ -45,6 +46,8 @@ export default class View {
         this.inter = null;
 
         this.setCallOffEmbeddedControls();
+
+        this.fromPostMessage = false;
     }
 
     /**
@@ -209,7 +212,27 @@ export default class View {
 
         this.openHH.setState = buttonStates.hidden;
         this.fullWindowed.setState = buttonStates.hidden;
+    }
 
+    /**
+     * 
+     * @param {Controller} controller 
+     */
+    addPostMessageListener(controller) {
+
+        window.addEventListener('message', (event) => {
+
+            if (event?.data?.call !== 'send-value') return;
+
+            const value = event.data.value ?? {};
+
+            this.disableShareHand();
+            this.disableHandHistoryOpen();
+
+            this.fromPostMessage = true;
+
+            controller.handLoad(value.hh, { fromDB: false, hero: value.hero });
+        });
     }
 
     resetScreen() {
@@ -401,7 +424,7 @@ export default class View {
 
     enableShareHand({ fromDB } = {}) {
 
-        if (fns.isMobile() || fromDB) return;
+        if (fns.isMobile() || fromDB || this.fromPostMessage) return;
 
         this.shareHand.setState = buttonStates.normal;
     }
@@ -409,6 +432,11 @@ export default class View {
     disableShareHand() {
 
         this.shareHand.setState = buttonStates.hidden;
+    }
+
+    disableHandHistoryOpen() {
+
+        this.openHH.setState = buttonStates.hidden;
     }
 
     toogleNavigationKeysSize() {

@@ -107,5 +107,17 @@ export default {
 
             return phase.conclusionCollects;
         }
+    },
+
+    boardRIT: (line, streetCards) => {
+
+        const matchBoardRIT = /^Board \[\w{2} \w{2} \w{2} \w{2} \w{2}\]$/.exec(line);
+
+        if (matchBoardRIT) {
+
+            streetCards.value = /\w{2} \w{2} \w{2} \w{2} \w{2}/.exec(line)[0].split(' ');
+
+            return true;
+        }
     }
 };

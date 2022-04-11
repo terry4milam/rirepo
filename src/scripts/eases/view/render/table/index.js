@@ -47,13 +47,16 @@ const drawTextCenter = function (context, text, color, point) {
  * @param {boolean} obj.isPLO
  * @param {{x:number,y:number}} obj.point
  * @param {number} [obj.alpha=1]
+ * @param {number} [obj.cardsCount=2]
  */
-export const drawPlayerCards = function ({ isPLO, point, alpha }) {
+export const drawPlayerCards = function ({ isPLO, point, alpha, cardsCount }) {
 
     const offSetX = 15;
     const offSetY = 4;
 
-    const outSetX = isPLO ? -offSetX : 0;
+    const offSetX_PLO_5_6 = -(cardsCount - 4) * 6;
+
+    const outSetX = isPLO ? -offSetX + offSetX_PLO_5_6 : 0;
     const outSetY = isPLO ? -offSetY : 0;
 
     return (card, index) => {
@@ -120,7 +123,8 @@ const players = function (history, tableMax, displayValueAbsx) {
         this.context.globalAlpha = 1;
     };
 
-    const isPLO = players.find(x => x.isHero).holeCards.length === 4;
+    const isPLO = players.find(x => x.isHero).holeCards.length > 3;
+    const cardsCount = players.find(x => x.isHero).holeCards.length;
 
     players.forEach(player => {
 
@@ -157,7 +161,7 @@ const players = function (history, tableMax, displayValueAbsx) {
 
             const point = displayPosition.holeCards;
 
-            const drawPlayerCardsAbsx = drawPlayerCards.call(this, { isPLO, point });
+            const drawPlayerCardsAbsx = drawPlayerCards.call(this, { isPLO, point, cardsCount });
 
             player.holeCards.forEach(drawPlayerCardsAbsx);
         }

@@ -270,6 +270,9 @@ const filterAllowedLines = lines => {
             /\:\sshows\s\[.+\]/,                            // shows
             /\:\smucks\shand$/m,                            // mucks
             /\scollected\s.+pot$/m,                         // collects
+
+            // NOTE:: Importante apenas para logs bill
+            /^Board \[\w{2} \w{2} \w{2} \w{2} \w{2}\]$/m,   // board
         ];
 
         const fixedLines = [

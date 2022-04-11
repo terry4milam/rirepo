@@ -77,6 +77,8 @@ export default class Controller {
 
             if (isFile) this.model.tryLoadFromHardDrive(this)
             else this.model.tryLoadFromOnlineDB(this);
+
+            this.view.addPostMessageListener(this, this.model);
         };
 
         this.view.setImages(tryPreLoadLog, this);
@@ -130,17 +132,19 @@ export default class Controller {
         Controller.mousePoint = mousePoint;
     }
 
-    async handLoad(log, { fromDB } = {}) {
+    async handLoad(log, { fromDB, hero } = {}) {
 
         this.isLoading = true;
 
         this.view.resetScreen();
 
+        log = this.model.fixLogEdges(log);
+
         if (!this.model.logValidation(log)) return this.isLoading = false;
 
         this.view.handsList.removeAll();
 
-        const transpiledLog = this.model.transpileToPokerStars(log, fromDB);
+        const transpiledLog = this.model.transpileToPokerStars(log, fromDB, hero);
 
         await this.model.processLog(transpiledLog, this.view);
 
