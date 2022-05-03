@@ -157,11 +157,15 @@ const players = function (history, tableMax, displayValueAbsx) {
             }
         }
 
-        if (player.holeCards && player.inPlay && !player.heroMucked) {
+        // NOTE:: na v0.11.1 mostra as cartas foldadas com "alpha", mesmo em "hero prespective"
+        // if (player.holeCards && player.inPlay && !player.heroMucked) {
+        if (player.holeCards && !player.heroMucked) {
 
             const point = displayPosition.holeCards;
 
-            const drawPlayerCardsAbsx = drawPlayerCards.call(this, { isPLO, point, cardsCount });
+            const alpha = player.inPlay ? 1 : 0.7;
+
+            const drawPlayerCardsAbsx = drawPlayerCards.call(this, { isPLO, point, cardsCount, alpha });
 
             player.holeCards.forEach(drawPlayerCardsAbsx);
         }
@@ -366,6 +370,56 @@ const streetCards = function (streetCards) {
 
 /**
  * @this {View}
+ * @param {string[][]} streetCardsRIT
+ * @param {string[]} streetCards
+ */
+const streetCardsRIT = function (streetCardsRIT, streetCards) {
+
+    if (!streetCardsRIT || !streetCardsRIT.length) return;
+
+    /**
+     * 
+     * @param {string[]} cards 
+     * @param {number} countRIT 
+     * @param {number} startRIT 0, 1 ou 2 - 0:Flop+, 1:Turn+, 2:River
+     */
+    const drawRit = (cards, countRIT, startRIT) => {
+
+        cards.forEach((card, index) => {
+
+            const { suit, value } = biz.getCardIndex(card);
+
+            const image = smallDeck[suit][value];
+
+            const xStartRIT = 268 + xStreet[startRIT];
+
+            const x = xStartRIT + image.width * index + (index * 4);
+
+            const y = 128 - countRIT * (image.height + 2);
+
+            this.context.drawImage(image, x, y);
+        });
+    };
+
+    const { smallDeck } = this.images;
+    const [[{ width: cardWidth }]] = this.images.deck;
+    const xStreet = [0, (cardWidth + 4) * 3, (cardWidth + 4) * 4];
+
+    streetCardsRIT.forEach((cards, index) => {
+
+        if (cards.toString() === streetCards.toString()) return;
+
+        const uniques = cards.filter(v => !streetCards.includes(v));
+
+        const startRIT = [5, 2, 1].indexOf(uniques.length);
+
+        drawRit(uniques, index, startRIT);
+    });
+};
+
+
+/**
+ * @this {View}
  * @param {HistoryT} history 
  */
 const middlePotValue = function (history, displayValueAbsx) {
@@ -417,6 +471,8 @@ export default {
         chipsValues.call(this, history.players, tableMax, displayValueAbsx);
 
         streetCards.call(this, history.streetCards);
+
+        streetCardsRIT.call(this, history.streetCardsRIT, history.streetCards);
 
         easeMiddlePot.call(this, history, tableMax, displayValueAbsx);
 

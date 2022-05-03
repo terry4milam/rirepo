@@ -226,6 +226,15 @@ export default class Model {
      */
     fixLogEdges(sessionLog) {
 
+        const match = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(|\t| )Round #/.exec(sessionLog);
+
+        console.log(match);
+
+        if (match && match.index) {
+
+            sessionLog = sessionLog.slice(match.index);
+        }
+
         return sessionLog.trim();
     }
 
@@ -237,7 +246,7 @@ export default class Model {
 
         const room = value => {
 
-            if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|\t| Round #/.test(value)) return true;
+            if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(|\t| )Round #/.test(value)) return true;
 
             const starts = ['PokerStars ', 'Poker Hand #'];
 

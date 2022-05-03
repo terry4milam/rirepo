@@ -57,7 +57,7 @@ const tryPatchButton = (lines, likelyButton, seatsNames) => {
  * Table:1500-6000 ףלק5, 6-max Seat #1 is the dealer.
  * 
  * output:
- * Round #1043080: Omaha Pot Limit (15/30) - 2022-04-01 03:46:39
+ * Round #1043080: Omaha Pot Limit (15/30) - 2022/04/01 03:46:39
  * Table '1500-6000 6' 5-max Seat #1 is the button
  * 
  * @param {string[]} lines 
@@ -106,7 +106,7 @@ const makeHeader = (lines, seatsNames) => {
  * 
  * output:
  * Seat 3: poker900500 (9616.16 in chips)
- * Seat 4: 007Bond (6000.00 in chips)
+ * Seat 4: 007Bond (6000 in chips)
  * 
  * @param {string[]} lines 
  */

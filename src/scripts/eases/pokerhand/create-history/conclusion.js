@@ -64,7 +64,7 @@ export default {
      * @param {string} line
      * @param {PlayerT[]} players 
      * @param {string[]} lines 
-     * @returns {boolea|undefined}
+     * @returns {boolean|undefined}
      */
     mucks: (line, players, lines) => {
 
@@ -89,7 +89,7 @@ export default {
      * 
      * @param {string} lines
      * @param {PlayerT[]} players 
-     * @returns {boolea|undefined}
+     * @returns {boolean|undefined}
      */
     collects: (line, players) => {
 
@@ -109,13 +109,22 @@ export default {
         }
     },
 
-    boardRIT: (line, streetCards) => {
+    /**
+     * 
+     * @param {string} line 
+     * @param {string[]} streetCards 
+     * @param {string[][]} streetCardsRIT 
+     * @returns {boolean|undefined}
+     */
+    boardRIT: (line, streetCards, streetCardsRIT) => {
 
-        const matchBoardRIT = /^Board \[\w{2} \w{2} \w{2} \w{2} \w{2}\]$/.exec(line);
+        const matchBoardRIT = /^Board \[\w{2} \w{2} \w{2} \w{2} \w{2}\]$/.test(line);
 
         if (matchBoardRIT) {
 
             streetCards.value = /\w{2} \w{2} \w{2} \w{2} \w{2}/.exec(line)[0].split(' ');
+
+            streetCardsRIT.push(streetCards.value);
 
             return true;
         }

@@ -19,7 +19,7 @@ export default {
         }
 
         // Bills
-        const searchPatternBills = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|\t| Round #/;
+        const searchPatternBills = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(|\t| )Round #/;
         if (searchPatternBills.test(log)) {
 
             return bills(log, hero);

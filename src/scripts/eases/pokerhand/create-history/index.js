@@ -413,6 +413,8 @@ const conclusion = (lines, previousHistory) => {
     // RIT: run it twice, usado apenas nos logs bill
     const streetCards = { value: previousHistory.streetCards };
 
+    const streetCardsRIT = [];
+
     conclusionLines.forEach(line => {
 
         const lastHistory = rear(histories) ?? previousHistory;
@@ -427,7 +429,7 @@ const conclusion = (lines, previousHistory) => {
 
         phase ||= easeConclusion.collects(line, newPlayers);
 
-        phase ||= easeConclusion.boardRIT(line, streetCards);
+        phase ||= easeConclusion.boardRIT(line, streetCards, streetCardsRIT);
 
         if (!phase) return;
 
@@ -443,6 +445,7 @@ const conclusion = (lines, previousHistory) => {
             line: line,
             lineIndex: null,
             streetCards: streetCards.value,
+            streetCardsRIT: streetCardsRIT.map(v => v),
             phase
         });
 
