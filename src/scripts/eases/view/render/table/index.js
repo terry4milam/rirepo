@@ -8,10 +8,11 @@ import easeMiddlePot from './middle-pot';
 import easeStaticAssets from './static';
 import easeRender from '@/scripts/eases/view/render/index'
 import { pipe } from '@/scripts/units/fxnl';
+import enums from '@/scripts/units/enums';
 
-export const displayValue = displayValueAssets => value => {
+export const displayValue = displayValueAssets => (value, { showZero } = {}) => {
 
-    if (pureValue(value) === 0) return 'ALL IN';
+    if (pureValue(value) === 0 && !showZero) return 'ALL IN';
 
     const { cashSign, isBigBlinds, bigBlind } = displayValueAssets;
 
@@ -49,7 +50,7 @@ const drawTextCenter = function (context, text, color, point) {
  * @param {number} [obj.alpha=1]
  * @param {number} [obj.cardsCount=2]
  */
-export const drawPlayerCards = function ({ isPLO, point, alpha, cardsCount }) {
+export const drawPlayerCards = function ({ isPLO, point, alpha, cardsCount, player }) {
 
     const offSetX = 15;
     const offSetY = 4;
@@ -69,8 +70,13 @@ export const drawPlayerCards = function ({ isPLO, point, alpha, cardsCount }) {
 
         const y = point.y + offSetY * index + outSetY;
 
-        this.context.globalAlpha = alpha;
         this.context.drawImage(image, x, y);
+
+        if (player.inPlay) return;
+
+        this.context.fillStyle = 'gray';
+        this.context.globalAlpha = 0.5;
+        this.context.fillRect(x, y, 50, 70);
         this.context.globalAlpha = 1;
     };
 };
@@ -123,6 +129,40 @@ const players = function (history, tableMax, displayValueAbsx) {
         this.context.globalAlpha = 1;
     };
 
+    const drawPlayersProfit = (player, displayPosition) => {
+
+        if (!this.showPlayersProfit.checked) return;
+
+        const red = '#660000';
+        const green = '#006600';
+        const color = player.profit === 0 ? 'LightGrey' :
+            player.profit > 0 ? green : red;
+
+        const profit = displayValueAbsx(player.profit, { showZero: true });
+        const textWidth = this.context.measureText(profit).width + 8;
+
+        const xProfit = displayPosition.profit.x + 1;
+        const yProfit = displayPosition.profit.y + 1;
+
+        this.context.save();
+        this.context.translate(xProfit - 50, yProfit - 10);
+
+        const gradient = this.context.createRadialGradient(50, 8, textWidth / 2, 50, 8, textWidth / 2 + 5);
+        gradient.addColorStop(0, 'white');
+        gradient.addColorStop(1, 'transparent');
+
+        this.context.fillStyle = gradient;
+        this.context.globalAlpha = 0.25;
+        this.context.beginPath();
+        this.context.ellipse(50, 8, 40, 6, 0, 0, 2 * Math.PI);
+        this.context.fill();
+        this.context.globalAlpha = 1;
+
+        this.context.restore();
+
+        drawTextCenter(this.context, profit, color, displayPosition.profit);
+    };
+
     const isPLO = players.find(x => x.isHero).holeCards.length > 3;
     const cardsCount = players.find(x => x.isHero).holeCards.length;
 
@@ -137,7 +177,12 @@ const players = function (history, tableMax, displayValueAbsx) {
         drawImage(status, displayPosition.status);
 
         drawTextCenter(this.context, player.name, 'white', displayPosition.name);
-        const stack = displayValueAbsx(player.mergedStack());
+
+        // NOTE:: `mergedStack()` para haver varios estagios da stack no collect
+        const stack = history.phase === enums.phase.summary
+            ? displayValueAbsx(player.stack)
+            : displayValueAbsx(player.mergedStack());
+
         drawTextCenter(this.context, stack, 'white', displayPosition.stack);
 
         if (player.isButton) {
@@ -163,9 +208,7 @@ const players = function (history, tableMax, displayValueAbsx) {
 
             const point = displayPosition.holeCards;
 
-            const alpha = player.inPlay ? 1 : 0.7;
-
-            const drawPlayerCardsAbsx = drawPlayerCards.call(this, { isPLO, point, cardsCount, alpha });
+            const drawPlayerCardsAbsx = drawPlayerCards.call(this, { isPLO, point, cardsCount, player });
 
             player.holeCards.forEach(drawPlayerCardsAbsx);
         }
@@ -190,6 +233,8 @@ const players = function (history, tableMax, displayValueAbsx) {
             drawTextCenter(this.context, player.bounty, 'blue', { x, y });
             this.context.globalAlpha = 1;
         }
+
+        drawPlayersProfit(player, displayPosition);
 
     });
 }
@@ -315,8 +360,12 @@ const betChips = function (players, tableMax) {
  * @this {View}
  * @param {PlayerT[]} players 
  * @param {number} tableMax
+ * @param {string[]} streetCards
  */
-const chipsValues = function (players, tableMax, displayValueAbsx) {
+const chipsValues = function (players, tableMax, streetCards, displayValueAbsx) {
+
+    const hasRiver = streetCards?.length === 5;
+    const hasFlop = streetCards?.length >= 3;
 
     players.forEach(player => {
 
@@ -326,7 +375,7 @@ const chipsValues = function (players, tableMax, displayValueAbsx) {
 
         const displayPosition = displayPositions(tableMax).find(findPlayer);
 
-        let { x, y } = displayPosition.chipsValue;
+        const { x, y } = displayPosition.chipsValue;
 
         const { seatFixed } = displayPosition;
 
@@ -335,6 +384,18 @@ const chipsValues = function (players, tableMax, displayValueAbsx) {
         const text = displayValueAbsx(value);
 
         const textAlign = seatFixed >= 5 ? 'left' : 'right';
+
+        const seat8fulfill = hasFlop && seatFixed === 8;
+        const seat2fulfill = hasRiver && seatFixed === 2;
+
+        if ((seat2fulfill || seat8fulfill) && text.length > 6) {
+
+            this.context.fillStyle = 'black';
+            const textWidth = this.context.measureText(text).width;
+            // NOTE:: valor negativo no "witdh" faz o fillRect para tras
+            const sign = textAlign === 'left' ? 1 : -1;
+            this.context.fillRect(x, y - 12, textWidth * sign, 12);
+        }
 
         this.context.textAlign = textAlign;
         this.context.textBaseline = 'bottom';
@@ -424,6 +485,8 @@ const streetCardsRIT = function (streetCardsRIT, streetCards) {
  */
 const middlePotValue = function (history, displayValueAbsx) {
 
+    if (history.phase === enums.phase.summary) return;
+
     const streetAmount = history.players.reduce((acc, cur) => acc + cur.amountOnStreet, 0);
 
     const value = pureValue(history.pot - streetAmount);
@@ -468,11 +531,11 @@ export default {
 
         waitingToAct.call(this, history, tableMax, displayValueAbsx);
 
-        chipsValues.call(this, history.players, tableMax, displayValueAbsx);
-
         streetCards.call(this, history.streetCards);
 
         streetCardsRIT.call(this, history.streetCardsRIT, history.streetCards);
+
+        chipsValues.call(this, history.players, tableMax, history.streetCards, displayValueAbsx);
 
         easeMiddlePot.call(this, history, tableMax, displayValueAbsx);
 

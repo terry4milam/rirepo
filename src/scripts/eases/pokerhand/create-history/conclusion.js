@@ -126,7 +126,7 @@ export default {
 
             streetCardsRIT.push(streetCards.value);
 
-            return true;
+            return phase.conclusionRIT;
         }
     }
 };

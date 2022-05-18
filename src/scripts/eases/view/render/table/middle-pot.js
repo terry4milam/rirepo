@@ -6,6 +6,7 @@ import displayPositions from '@/scripts/units/display-positions';
 import biz from '@/scripts/units/biz';
 import easeRender from '@/scripts/eases/view/render/index';
 import embeddedRects from '@/scripts/eases/view/embedded-controls-rects';
+import enums from '@/scripts/units/enums';
 
 const frames = 10;
 
@@ -196,6 +197,8 @@ const draw = function (makeChipsOffSetsAbsx, text, winner, tableMax) {
  * @param {number} tableMax
  */
 export default function (history, tableMax, displayValueAbsx) {
+
+    if (history.phase === enums.phase.summary) return;
 
     const { chips } = this.images;
 

@@ -2,6 +2,8 @@ import View from "./view";
 import Model from "./model";
 import enums from '@/scripts/units/enums';
 import fns from '@/scripts/units/fns'
+import Button from './controls/button';
+import { HistoryT } from '@/scripts/units/history';
 
 export default class Controller {
 
@@ -21,6 +23,7 @@ export default class Controller {
         this.view = view;
 
         this.view.bindControls({
+            windowKeydown: this.handlerWindow_onKeydown,
             loadHandHistory: this.handlerLoadHandHistory_onChange,
             canvasMouseDown: this.handlerCanvas_onMouseDown,
             canvasMouseUp: this.handlerCanvas_onMouseUp,
@@ -68,6 +71,33 @@ export default class Controller {
             },
             fullWindowed: {
                 click: this.handlerFullWindowed_onClick
+            },
+            preflopNav: {
+                click: this.handlerPreflopNav_onClick
+            },
+            flopNav: {
+                click: this.handlerFlopNav_onClick
+            },
+            turnNav: {
+                click: this.handlerTurnNav_onClick
+            },
+            riverNav: {
+                click: this.handlerRiverNav_onClick
+            },
+            summaryNav: {
+                click: this.handlerSummaryNav_onClick
+            },
+            settings: {
+                click: this.handlerSettings_onClick
+            },
+            startBySummary: {
+                click: this.handlerStartBySummary_onClick
+            },
+            showPlayersProfit: {
+                click: this.handlerShowPlayersProfit_onClick
+            },
+            closeSettings: {
+                click: this.handlerCloseSettings_onClick
             }
         });
 
@@ -80,6 +110,8 @@ export default class Controller {
 
             this.view.addPostMessageListener(this, this.model);
         };
+
+        this.view.updateSettings(this.model.loadLocalStorageSettings());
 
         this.view.setImages(tryPreLoadLog, this);
     }
@@ -148,25 +180,32 @@ export default class Controller {
 
         await this.model.processLog(transpiledLog, this.view);
 
-        const history = this.model.getFirstHistory();
-
         this.view.handsList.setRange(this.model.handsList);
 
         this.view.handsList.setMaxHiddenRule();
 
-        this.view.updateChat(history, enums.navigation.nextHand);
+        const history = this.model.navigationStreet(this.model.startPhase);
 
-        this.view.render(history, this.model.mainInfo);
+        const chat = this.model.makeChatArray(this.model.startPhase);
+        this.view.updateChat({ chat });
 
-        const enables = this.model.getNavigationEnables();
-
-        this.view.updateNavigation(enables);
+        this.finalizeNavigation(history);
 
         this.view.resetHandSearchFilterVisibility();
 
         this.view.enableShareHand({ fromDB });
 
         this.isLoading = false;
+    }
+
+    handlerWindow_onKeydown = (e) => {
+
+        const scrollKeys = ['ArrowUp', 'ArrowDown'];
+
+        if (scrollKeys.includes(e.code)) {
+
+            e.preventDefault();
+        }
     }
 
     handlerOpenHH_onClick = () => {
@@ -255,13 +294,19 @@ export default class Controller {
     handlerCanvas_onKeyUp = (e) => {
 
         const enables = this.model.getNavigationEnables();
+        const streetEnables = this.model.streetEnables();
 
         const map = {
 
             ArrowUp: 'previousHand',
             ArrowLeft: 'previousAction',
             ArrowRight: 'nextAction',
-            ArrowDown: 'nextHand'
+            ArrowDown: 'nextHand',
+            KeyP: `${enums.phase.preflop}`,
+            KeyF: `${enums.phase.flop}`,
+            KeyT: `${enums.phase.turn}`,
+            KeyR: `${enums.phase.river}`,
+            KeyS: `${enums.phase.summary}`,
         };
 
         const buttonLabel = map[e.code];
@@ -272,6 +317,14 @@ export default class Controller {
 
             this[`handler${capitalised}_onClick`]();
         }
+
+        if (streetEnables[buttonLabel]) {
+
+            const capitalised = fns.capitalize(buttonLabel);
+
+            // NOTE:: Tem `nav` no nome
+            this[`handler${capitalised}Nav_onClick`]();
+        }
     }
 
     handlerCanvas_onFullscreenchange = () => {
@@ -281,6 +334,8 @@ export default class Controller {
         if (!fns.isMobile()) return;
 
         this.view.toogleNavigationKeysSize();
+
+        this.view.toogleNavigationStreetKeysSize();
 
         const history = this.model.getHistory();
 
@@ -312,17 +367,16 @@ export default class Controller {
 
         this.view.stopPlayback();
 
-        const { nextHand } = enums.navigation;
-
-        const { history, enables } = this.model.navigateTo(handIndex);
-
-        this.view.updateChat(history, nextHand);
+        this.model.navigateTo(handIndex);
 
         this.view.enableShareHand();
 
-        this.view.render(history, this.model.mainInfo);
+        const history = this.model.navigationStreet(this.model.startPhase);
 
-        this.view.updateNavigation(enables);
+        const chat = this.model.makeChatArray(this.model.startPhase);
+        this.view.updateChat({ chat });
+
+        this.finalizeNavigation(history);
     }
 
     /**
@@ -347,13 +401,14 @@ export default class Controller {
 
             this.view.toogleHandSearchFilterVisibility();
 
-            const history = this.model.getHistory();
-
             this.view.render(history, this.model.mainInfo, r.hand);
 
-            const enables = this.model.getNavigationEnables();
+            const history = this.model.navigationStreet(this.model.startPhase);
 
-            this.view.updateNavigation(enables);
+            const chat = this.model.makeChatArray(this.model.startPhase);
+            this.view.updateChat({ chat });
+
+            this.finalizeNavigation(history);
         }
     }
 
@@ -364,93 +419,6 @@ export default class Controller {
         this.view.handsList.clearFilter();
 
         this.view.toogleHandSearchFilterVisibility();
-    }
-
-
-    handlerPreviousHand_onClick = () => {
-
-        this.view.stopPlayback();
-
-        const { previousHand } = enums.navigation;
-
-        const { history, enables } = this.model.navigation(previousHand);
-
-        this.view.updateChat(history, previousHand);
-
-        this.view.adjustHandsList();
-
-        this.view.enableShareHand();
-
-        this.view.render(history, this.model.mainInfo);
-
-        this.view.updateNavigation(enables);
-    }
-
-
-    handlerPreviousAction_onClick = () => {
-
-        this.view.stopPlayback();
-
-        const { previousAction } = enums.navigation;
-
-        const { history, enables } = this.model.navigation(previousAction);
-
-        this.view.updateChat(history, previousAction);
-
-        this.view.render(history, this.model.mainInfo);
-
-        this.view.updateNavigation(enables);
-    }
-
-    handlerPlay_onClick = () => {
-
-        const nextActionHandler = this.handlerNextAction_onClick;
-
-        this.view.tooglePlayback(nextActionHandler, this.model);
-    };
-
-    handlerNextAction_onClick = ({ fromPlay } = {}) => {
-
-        if (!fromPlay) this.view.stopPlayback();
-
-        this.view.previousAction.setState = 'normal';
-
-        const { nextAction } = enums.navigation;
-
-        const { history, enables, next } = this.model.navigation(nextAction);
-
-        // NOTE:: Náo é sempre 'nextAction', caso seja o ultimo progress da hand
-        this.view.updateChat(history, next);
-
-        if (next !== nextAction) {
-
-            this.view.adjustHandsList();
-
-            this.view.enableShareHand();
-        }
-
-        this.view.render(history, this.model.mainInfo);
-
-        this.view.updateNavigation(enables);
-    }
-
-    handlerNextHand_onClick = () => {
-
-        this.view.stopPlayback();
-
-        const { nextHand } = enums.navigation;
-
-        const { history, enables } = this.model.navigation(nextHand);
-
-        this.view.updateChat(history, nextHand);
-
-        this.view.adjustHandsList();
-
-        this.view.enableShareHand();
-
-        this.view.render(history, this.model.mainInfo);
-
-        this.view.updateNavigation(enables);
     }
 
     handlerShareHand_onClick = async () => {
@@ -470,6 +438,185 @@ export default class Controller {
             this.view.disableShareHand();
 
         } else alert(content.message);
+    }
+
+    // #region Hands Navigation
+
+    /**
+     * Chamado por handlers da hand navigation que mudam de hand:
+     * * handlerPreviousHand_onClick
+     * * handlerNextAction_onClick - quando `progress` é ultimo (excluindo "summary")
+     * * handlerNextHand_onClick
+     */
+    otherHandNavCommon() {
+
+        const chat = this.model.makeChatArray(this.model.startPhase);
+        this.view.updateChat({ chat });
+
+        this.view.adjustHandsList();
+
+        this.view.enableShareHand();
+    }
+
+    handlerPreviousHand_onClick = () => {
+
+        this.view.stopPlayback();
+
+        const { previousHand } = enums.navigation;
+
+        const { history } = this.model.navigation(previousHand);
+
+        this.otherHandNavCommon();
+
+        this.finalizeNavigation(history);
+    }
+
+    handlerPreviousAction_onClick = () => {
+
+        this.view.stopPlayback();
+
+        const { previousAction } = enums.navigation;
+
+        const { history } = this.model.navigation(previousAction);
+
+        this.view.updateChat({ navigation: previousAction });
+
+        this.finalizeNavigation(history);
+    }
+
+    handlerPlay_onClick = () => {
+
+        const nextActionHandler = this.handlerNextAction_onClick;
+
+        this.view.tooglePlayback(nextActionHandler, this.model);
+    };
+
+    handlerNextAction_onClick = ({ fromPlay } = {}) => {
+
+        if (!fromPlay) this.view.stopPlayback();
+
+        this.view.previousAction.setState = 'normal';
+
+        const { nextAction } = enums.navigation;
+
+        const { history, next, kickoff } = this.model.navigation(nextAction);
+
+        const chatParams = { history, navigation: nextAction, kickoff };
+
+        // NOTE:: Náo é sempre 'nextAction', caso seja o ultimo progress da hand é 'nextHand'
+        if (next === nextAction) this.view.updateChat(chatParams);
+        else this.otherHandNavCommon();
+
+        this.finalizeNavigation(history);
+    }
+
+    handlerNextHand_onClick = () => {
+
+        this.view.stopPlayback();
+
+        const { nextHand } = enums.navigation;
+
+        const { history } = this.model.navigation(nextHand);
+
+        this.otherHandNavCommon();
+
+        this.finalizeNavigation(history);
+    }
+    //#endregion
+
+
+    // #region Street Navigation
+
+    streetNavCommon(button, phase) {
+
+        this.view.stopPlayback();
+
+        const history = this.model.navigationStreet(phase);
+
+        const chat = this.model.makeChatArray(phase);
+        this.view.updateChat({ chat });
+
+        this.finalizeNavigation(history, button);
+    }
+
+    handlerPreflopNav_onClick = (button) => {
+
+        this.streetNavCommon(button, enums.phase.preflop);
+    }
+
+    handlerFlopNav_onClick = (button) => {
+
+        this.streetNavCommon(button, enums.phase.flop);
+    }
+
+    handlerTurnNav_onClick = (button) => {
+
+        this.streetNavCommon(button, enums.phase.turn);
+    }
+
+    handlerRiverNav_onClick = (button) => {
+
+        this.streetNavCommon(button, enums.phase.river);
+    }
+
+    handlerSummaryNav_onClick = (button) => {
+
+        this.streetNavCommon(button, enums.phase.summary);
+    }
+
+    //#endregion
+
+    /**
+     * 
+     * @param {HistoryT} history 
+     * @param {Button} streetButton 
+     */
+    finalizeNavigation(history, streetButton) {
+
+        const enables = this.model.getNavigationEnables();
+        this.view.updateNavigation(enables);
+
+        this.view.turnOffSwitchFeatButtons('street-nav', streetButton);
+        const streetParams = {
+            enables: this.model.streetEnables(),
+            pushed: this.model.streetPushed()
+        };
+        this.view.updateStreetNavigationUI(streetParams);
+
+        this.view.render(history, this.model.mainInfo);
+    }
+
+    handlerSettings_onClick = () => {
+
+        this.view.showSettings();
+    }
+
+    handlerStartBySummary_onClick = (checkBox) => {
+
+        this.model.updateLocalStorageSettings({
+            name: 'startBySummary',
+            value: checkBox.checked
+        });
+    }
+
+    handlerShowPlayersProfit_onClick = (checkBox) => {
+
+        this.model.updateLocalStorageSettings({
+            name: 'showPlayersProfit',
+            value: checkBox.checked
+        });
+
+        const history = this.model.getHistory();
+
+        if (!history || !this.model.mainInfo) return;
+
+        this.view.render(history, this.model.mainInfo);
+    }
+
+    handlerCloseSettings_onClick = () => {
+
+        // NOTE:: Náo pode ser `closeSettings` por é o nome do button
+        this.view.hideSettings();
     }
 
     //#endregion

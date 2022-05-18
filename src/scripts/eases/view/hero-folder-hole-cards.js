@@ -59,7 +59,7 @@ export default {
         // NOTE:: usando ploPoint engloba logo hold'em e plo
         const noCards = this.context.getImageData(ploPoint.x, ploPoint.y, 95, 82);
 
-        const params = { isPLO, point, alpha: 0.8, cardsCount: hero.holeCards.length };
+        const params = { isPLO, point, alpha: 0.8, cardsCount: hero.holeCards.length, player: hero };
 
         const drawPlayerCardsAbsx = drawPlayerCards.call(this, params);
 

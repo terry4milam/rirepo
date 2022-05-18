@@ -19,10 +19,17 @@ export default class Chat extends Control {
 
         this.itemHeight = 90 / 6;
 
+        this.background = null;
+        this.visible = true;
+
         this.createScrollbar();
     }
 
     async setImage(image) {
+
+        const { x, y, width, height } = this;
+
+        this.background = this.view.context.getImageData(x, y, width + 1, height + 1);
 
         await this.scrollbar.setImages();
 
@@ -114,6 +121,8 @@ export default class Chat extends Control {
      */
     hitMe({ x, y }) {
 
+        if (!this.visible) return false;
+
         const right = this.x + this.width - (this.scrollbar.width + 7);
         const bottom = this.y + this.height;
 
@@ -127,6 +136,8 @@ export default class Chat extends Control {
      * @override
      */
     draw() {
+
+        if (!this.visible) return;
 
         this.context.setTransform(1, 0, 0, 1, 0, 0);
         this.context.font = '10px Arial';
@@ -161,4 +172,25 @@ export default class Chat extends Control {
     }
 
     // #endregion
+
+    drawBackground() {
+
+        if (!this.background) return;
+
+        this.context.putImageData(this.background, this.x, this.y);
+    }
+
+    set visibility(value) {
+
+        this.visible = value;
+        this.scrollbar.visibility = value;
+
+        if (value) this.draw();
+        else this.drawBackground();
+    }
+
+    get visibility() {
+
+        return this.visible;
+    }
 }

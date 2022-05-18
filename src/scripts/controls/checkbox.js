@@ -21,6 +21,7 @@ export default class CheckBox extends Control {
 
         this.checked = false;
         this.text = text;
+        this.visible = true;
 
         this.handlers = {
             click: null
@@ -62,7 +63,7 @@ export default class CheckBox extends Control {
 
         this.checked = !this.checked;
 
-        this.handlers.click();
+        this.handlers.click(this);
 
         this.draw();
     }
@@ -96,6 +97,8 @@ export default class CheckBox extends Control {
     }
 
     draw() {
+
+        if (!this.visible) return;
 
         const drawBox = () => {
 
@@ -151,4 +154,26 @@ export default class CheckBox extends Control {
     }
 
     // #endregion
+
+    drawBackground() {
+
+        if (!this.background) return;
+
+        this.context.putImageData(this.background, this.x, this.y);
+    }
+
+    set visibility(value) {
+
+        this.visible = value;
+
+        if (value) this.draw();
+        else this.drawBackground();
+    }
+
+    get visibility() {
+
+        return this.visible;
+    }
+
+
 }

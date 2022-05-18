@@ -81,7 +81,7 @@ export default function (lines, index, count) {
         mainInfo,
         players,
         histories,
-        handsListItem, 
+        handsListItem,
         lines,
         index
     };

@@ -17,6 +17,9 @@ import clearHandFilter from '@/assets/images/clear-button-28x28.png';
 import logo from '@/assets/images/logo-orange-174x26-30-opacy.png';
 import openShareButtons from '@/assets/images/open-share-hand-446x58-223x29.png';
 import fullWindowed from '@/assets/images/full-windowed-26x24-52x48.png';
+import streetNav from '@/assets/images/street-nav-28x28-140x140.png';
+import settings from '@/assets/images/gear-28x28.png';
+import settingsContainer from '@/assets/images/settings-329x108.png';
 
 const getImage = async function (file) {
 
@@ -52,7 +55,10 @@ export default {
                 getImage(clearHandFilter),
                 getImage(logo),
                 getImage(openShareButtons),
-                getImage(fullWindowed)
+                getImage(fullWindowed),
+                getImage(streetNav),
+                getImage(settings),
+                getImage(settingsContainer)
             ];
 
             const r = await Promise.all(arrFiles);
@@ -93,6 +99,9 @@ export default {
             images.logo = r[14];
             images.openShareButtons = r[15];
             images.fullWindowed = r[16];
+            images.streetNav = r[17];
+            images.settings = r[18];
+            images.settingsContainer = r[19];
 
             return images;
 

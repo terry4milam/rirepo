@@ -50,9 +50,13 @@ export default class Sb extends Control {
         };
 
         this.maxTrackAvailable = this.height - (16 * 2 + this.thumb.minHeight);
+
+        this.visible = true;
     }
 
     get hidden() {
+
+        if (!this.visible) return true;
 
         return this.rows.total <= this.rows.visible;
     }
@@ -365,4 +369,18 @@ export default class Sb extends Control {
     }
 
     // #endregion
+
+    /** @param {boolean} value */
+    set visibility(value) {
+
+        this.visible = value;
+
+        const state = this.hidden ? buttonStates.hidden : buttonStates.normal;
+
+        this.up.setState = state;
+        this.down.setState = state;
+
+        this.draw();
+    }
+
 }

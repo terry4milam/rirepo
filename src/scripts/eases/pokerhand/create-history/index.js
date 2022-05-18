@@ -110,9 +110,12 @@ const getStreetLine = (lines, delimiters) => {
 
     const delimiterLineIndexStart = lines.findIndex(findDelimiterIndex);
 
+    const phase = `${/\w+(?=\s\*{3})/.exec(delimiters.current)}`.toLowerCase();
+
     return {
         value: lines[delimiterLineIndexStart],
-        index: delimiterLineIndexStart
+        index: delimiterLineIndexStart,
+        phase
     };
 };
 
@@ -207,7 +210,8 @@ const posts = (lines, players) => {
 
         players: newPlayers,
         pot,
-        line: historyLines
+        line: historyLines,
+        phase: 'preflop'
     };
 
     return History(history);
@@ -374,7 +378,8 @@ const street = (lines, previousHistory, delimiters) => {
         player: null,
         line: streetLine.value,
         lineIndex: streetLine.index,
-        streetCards
+        streetCards,
+        phase: streetLine.phase
     });
 
     return [history];
@@ -404,8 +409,6 @@ const conclusion = (lines, previousHistory) => {
     // vikcch collected 14448 from main pot
 
     const conclusionLines = getConclusionLines(lines);
-
-    // const { streetCards } = previousHistory;
 
     const histories = [];
 
@@ -456,12 +459,57 @@ const conclusion = (lines, previousHistory) => {
 };
 
 
+/**
+ * 
+ * @param {HistoryT[]} conclusions
+ * @returns {History[]} 
+ */
+const summary = (conclusions) => {
+
+    // NOTE:: Ultimo do array para ter acesso a holecards
+    const newPlayers = conclusions.at(-1).players.map(x => x.cloneReset());
+
+    newPlayers.forEach(v => {
+
+        const totalCollect = conclusions.reduce((acc, cur) => {
+
+            const player = cur.players.find(vv => vv.seat === v.seat);
+
+            return acc + player.collect;
+        }, 0);
+
+        v.amountOnStreet = totalCollect;
+    });
+
+    const pot = conclusions[0].pot;
+    const line = ['*** SUMMARY ***'];
+    const lastIndex = conclusions.length - 1;
+    const streetCards = conclusions[lastIndex].streetCards;
+    const streetCardsRIT = conclusions[lastIndex].streetCardsRIT;
+
+    const summary = History({
+
+        players: newPlayers,
+        pot,
+        action: '',
+        player: null,
+        line: line,
+        lineIndex: null,
+        streetCards,
+        streetCardsRIT,
+        phase: enums.phase.summary
+    });
+
+    return [summary];
+};
+
 export default {
 
     posts,
     activity,
     street,
-    conclusion
+    conclusion,
+    summary
 };
 
 

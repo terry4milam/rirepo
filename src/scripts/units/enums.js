@@ -2,7 +2,7 @@ export const buttonStates = {
     normal: 'normal',
     hover: 'hover',
     disabled: 'disabled',
-    hidden: 'hidden'
+    hidden: 'hidden',
 };
 
 export const checkBoxStates = {
@@ -20,10 +20,16 @@ export const navigation = {
 
 export const phase = {
 
+    preflop: 'preflop',
+    flop: 'flop',
+    turn: 'turn',
+    river: 'river',
     conclusionShows: 'conclusionShows',
     conclusionMucks: 'conclusionMucks',
     conclusionCollects: 'conclusionCollects',
     conclusionShowsTease: 'conclusionShowsTease', // Mostra depois de ganhar o pot
+    conclusionRIT: 'conclusionRIT',
+    summary: 'summary'
 };
 
 export const profitColor = {

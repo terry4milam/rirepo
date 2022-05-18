@@ -8,10 +8,12 @@ export default class Button {
     /**
      * 
      * @param { View } view 
-     * @param {*} param1 
-     * @param {*} param2 
+     * @param {object} param2 
+     * @param {string} [param2.state]
+     * @param {boolean} [param2.is3d]
+     * @param {string|boolean} [param2.switchTag] Etiqueta para settar `switchFeat.pushed` de todos relacionados a false
      */
-    constructor(view, { x, y, width, height }, { state, is3d } = {}) {
+    constructor(view, { x, y, width, height }, { state, is3d, switchTag } = {}) {
 
         view.embeddables.push(this);
 
@@ -19,6 +21,7 @@ export default class Button {
 
         // No click, move 1 pixel para a sudeste
         this.is3d = is3d ?? true;
+        this.switchFeat = switchTag ? { tag: switchTag, pushed: false } : false;
         this.background = null;
 
         this.context = view.context;
@@ -35,6 +38,8 @@ export default class Button {
             normal: null,
             hover: null,
             disabled: null,
+            pushed: null,
+            hoverPushed: null
         };
 
         this.state = state ?? states.normal;
@@ -104,7 +109,10 @@ export default class Button {
 
         this.isPressed = false;
 
-        this.handlers.click();
+        if (this.switchFeat) this.switchFeat.pushed = true;
+
+        // NOTE:: Ou `bind` no controller, `click: xxx.bind(null, button)`
+        this.handlers.click(this);
         this.draw();
     }
 
@@ -149,7 +157,7 @@ export default class Button {
 
     async setImages(image, { row }) {
 
-        const keys = ['normal', 'hover', 'disabled'];
+        const keys = ['normal', 'hover', 'disabled', 'pushed', 'hoverPushed'];
 
         const { x, y, width, height } = this;
 
@@ -163,6 +171,13 @@ export default class Button {
 
             this.images[key] = v;
         });
+    }
+
+    getImageName(state) {
+
+        if (!this.switchFeat || !this.switchFeat.pushed) return state;
+
+        return state === states.hover ? 'hoverPushed' : 'pushed';
     }
 
     draw() {
@@ -181,11 +196,29 @@ export default class Button {
         const x = this.x + (this.isPressed ? 1 : 0);
         const y = this.y + (this.isPressed ? 1 : 0);
 
-        this.context.drawImage(this.images[state], x, y, this.width, this.height);
+        const imageName = this.getImageName(state);
+
+        this.context.drawImage(this.images[imageName], x, y, this.width, this.height);
     }
 
     drawBackground() {
 
+        if (!this.background) return;
+
         this.context.putImageData(this.background, this.x, this.y);
+    }
+
+    set visibility(value) {
+
+        this.state = value ? states.normal : states.hidden;
+
+        if (value) this.draw();
+        else this.drawBackground();
+    }
+
+    // NOTE:: Sem uso
+    get visibility() {
+        
+        return undefined;
     }
 }

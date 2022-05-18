@@ -1,7 +1,7 @@
 import { HistoryT } from '@/scripts/units/history';
 import { MainInfoT } from '@/scripts/units/main-info';
 import View from '@/scripts/view';
-import tableBridge from '@/scripts/eases/view/render/table';
+import tableBridge from '@/scripts/eases/view/render/table/index';
 import mainInfoBridge from '@/scripts/eases/view/render/main-info';
 import handsFilterBridge from '@/scripts/eases/view/render/hands-filter';
 import { getBigBlind } from '@/scripts/units/biz';

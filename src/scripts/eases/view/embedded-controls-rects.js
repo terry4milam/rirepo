@@ -14,29 +14,54 @@ export default {
 
     navigation: {
 
+        /*    previousHand: {
+               x: 470 + tableRect.x,
+               y: 470 + tableRect.y,
+               width: 50, height: 28
+           },
+           previousAction: {
+               x: 525 + tableRect.x,
+               y: 470 + tableRect.y,
+               width: 50, height: 28
+           },
+           play: {
+               x: 580 + tableRect.x,
+               y: 470 + tableRect.y,
+               width: 50, height: 28
+           },
+           nextAction: {
+               x: 635 + tableRect.x,
+               y: 470 + tableRect.y,
+               width: 50, height: 28
+           },
+           nextHand: {
+               x: 690 + tableRect.x,
+               y: 470 + tableRect.y,
+               width: 50, height: 28
+           } */
         previousHand: {
-            x: 470 + tableRect.x,
-            y: 464 + tableRect.y,
+            x: 430 + tableRect.x,
+            y: 470 + tableRect.y,
             width: 50, height: 28
         },
         previousAction: {
-            x: 525 + tableRect.x,
-            y: 464 + tableRect.y,
+            x: 485 + tableRect.x,
+            y: 470 + tableRect.y,
             width: 50, height: 28
         },
         play: {
-            x: 580 + tableRect.x,
-            y: 464 + tableRect.y,
+            x: 540 + tableRect.x,
+            y: 470 + tableRect.y,
             width: 50, height: 28
         },
         nextAction: {
-            x: 635 + tableRect.x,
-            y: 464 + tableRect.y,
+            x: 595 + tableRect.x,
+            y: 470 + tableRect.y,
             width: 50, height: 28
         },
         nextHand: {
-            x: 690 + tableRect.x,
-            y: 464 + tableRect.y,
+            x: 650 + tableRect.x,
+            y: 470 + tableRect.y,
             width: 50, height: 28
         }
     },
@@ -77,34 +102,115 @@ export default {
 
         previousHand: {
             x: 342 + tableRect.x,
-            y: 464 + tableRect.y,
+            y: 484 + tableRect.y,
             width: 50 * phi, height: 28 * phi
         },
         previousAction: {
             x: 432 + tableRect.x,
-            y: 464 + tableRect.y,
+            y: 484 + tableRect.y,
             width: 50 * phi, height: 28 * phi
         },
         play: {
             x: 522 + tableRect.x,
-            y: 464 + tableRect.y,
+            y: 484 + tableRect.y,
             width: 50 * phi, height: 28 * phi
         },
         nextAction: {
             x: 612 + tableRect.x,
-            y: 464 + tableRect.y,
+            y: 484 + tableRect.y,
             width: 50 * phi, height: 28 * phi
         },
         nextHand: {
             x: 702 + tableRect.x,
-            y: 464 + tableRect.y,
+            y: 484 + tableRect.y,
             width: 50 * phi, height: 28 * phi
         }
     },
 
     fullWindowed: {
         x: 753 + tableRect.x,
-        y: 410 + tableRect.y,
+        y: 420 + tableRect.y,
         width: 26, height: 24
+    },
+
+    settings: {
+        x: 80 + tableRect.x,
+        y: 390 + tableRect.y,
+        width: 28, height: 28
+    },
+
+    startBySummary: {
+        x: 14 + tableRect.x,
+        y: 490 + tableRect.y,
+        width: 10, height: 14
+    },
+
+    showPlayersProfit: {
+        x: 14 + tableRect.x,
+        y: 512 + tableRect.y,
+        width: 10, height: 14
+    },
+
+    closeSettings: {
+        x: 295 + tableRect.x,
+        y: 468 + tableRect.y,
+        width: 28, height: 28
+    },
+
+    streetNavigation: {
+
+        preflop: {
+            x: 540 + tableRect.x,
+            y: 420 + tableRect.y,
+            width: 28, height: 28
+        },
+        flop: {
+            x: 572 + tableRect.x,
+            y: 420 + tableRect.y,
+            width: 28, height: 28
+        },
+        turn: {
+            x: 604 + tableRect.x,
+            y: 420 + tableRect.y,
+            width: 28, height: 28
+        },
+        river: {
+            x: 636 + tableRect.x,
+            y: 420 + tableRect.y,
+            width: 28, height: 28
+        },
+        summary: {
+            x: 672 + tableRect.x,
+            y: 420 + tableRect.y,
+            width: 28, height: 28
+        },
+    },
+    streetNavigationMobile: {
+
+        preflop: {
+            x: 500 + tableRect.x,
+            y: 410 + tableRect.y,
+            width: 28 * phi, height: 28 * phi
+        },
+        flop: {
+            x: 555 + tableRect.x,
+            y: 410 + tableRect.y,
+            width: 28 * phi, height: 28 * phi
+        },
+        turn: {
+            x: 610 + tableRect.x,
+            y: 410 + tableRect.y,
+            width: 28 * phi, height: 28 * phi
+        },
+        river: {
+            x: 665 + tableRect.x,
+            y: 410 + tableRect.y,
+            width: 28 * phi, height: 28 * phi
+        },
+        summary: {
+            x: 730 + tableRect.x,
+            y: 410 + tableRect.y,
+            width: 28 * phi, height: 28 * phi
+        },
     }
 };

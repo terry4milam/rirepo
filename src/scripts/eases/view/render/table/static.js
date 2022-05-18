@@ -1,5 +1,6 @@
 import easeRender from '@/scripts/eases/view/render/index'
 import { profitColor } from '@/scripts/units/enums';
+import View from '@/scripts/view';
 
 /**
  * 
@@ -67,19 +68,29 @@ const legend = function () {
     this.context.fillText('20+ BB', x + 30, y + 33);
 };
 
+/**
+ * @this {View}
+ */
 const version = function () {
 
     const x = 3, y = 366;
 
     this.context.font = '11px consolas';
 
-    const text = 'RIROPO v0.11.1';
+    const brand = this.fromPostMessage ? '' : 'RIROPO ';
+    const text = `${brand} v0.12.0`;
+    // NOTE:: Complementado com `vue.config.js`
+    // const text = process.env.VUE_APP_VERSION;
 
     this.context.textAlign = 'left';
     this.context.fillStyle = '#ffffe1';
     this.context.fillText(text, x, y);
 };
 
+
+/**
+ * @this {View}
+ */
 export default function () {
 
     const { table: tableRect, logo } = easeRender.rects;
@@ -92,11 +103,14 @@ export default function () {
 
     this.context.drawImage(this.images.background, 0, 0);
 
-    this.context.drawImage(this.images.logo, logo.x, logo.y);
-
-    poweredBy.call(this);
-
     legend.call(this);
 
     version.call(this);
+
+    // Sem brand em bills hands
+    if (this.fromPostMessage) return;
+
+    this.context.drawImage(this.images.logo, logo.x, logo.y);
+
+    poweredBy.call(this);
 }

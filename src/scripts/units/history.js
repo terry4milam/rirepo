@@ -13,7 +13,7 @@ import { PlayerT } from '@/scripts/units/player';
  * @param {number} obj.lineIndex
  * @param {PlayerT} obj.nextPlayer
  * @param {boolean} obj.allIn não é copiado, procurar pelo primeiro..
- * @param {string} obj.phase 
+ * @param {string} obj.phase enums.phase
  * 
  */
 export const History = function ({

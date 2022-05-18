@@ -3,7 +3,7 @@ import { Player, PlayerT } from '@/scripts/units/player';
 import { History, HistoryT } from '@/scripts/units/history';
 
 import createPlayer from './create-player';
-import createHistory from './create-history';
+import createHistory from './create-history/index';
 import createMainInfoAssist from './create-main-info';
 
 import { head, rear } from '@/scripts/units/fns';
@@ -17,7 +17,9 @@ import biz from '@/scripts/units/biz';
  * 
  * @param {HistoryT[]} histories 
  */
-const fixShowCardsOnAllIn = histories => {
+const tryFixShowCardsOnAllInMut = histories => {
+
+    if (!histories.some(v => v.allIn)) return;
 
     const allInIndex = histories.findIndex(v => v.allIn);
 
@@ -49,8 +51,46 @@ const fixShowCardsOnAllIn = histories => {
 
     newHistories.splice(allInIndex, 0, historyShowCards);
 
-    return newHistories.filter(Boolean);
+    histories = newHistories.filter(Boolean);
 };
+
+
+/**
+ * 
+ * @param {HistoryT[]} histories 
+ * @param {Player[]} players Tem as stacks iniciais
+ * @param {HistoryT[]} conclusions 
+ */
+const addProfitMut = (histories, players, conclusions) => {
+
+    const playersLastStacks = conclusions[0].players.map(x => x.cloneReset());
+
+    playersLastStacks.forEach(p => {
+
+        const totalCollect = conclusions.reduce((acc, cur) => {
+
+            const player = cur.players.find(v => v.seat === p.seat);
+
+            return acc + player.collect;
+        }, 0);
+
+        const initialStack = players.find(v => v.seat === p.seat).stack;
+
+        p.profit = (p.stack + totalCollect) - initialStack;
+    });
+
+    histories.forEach(history => {
+
+        history.players.forEach(player => {
+
+            const targetPlayer = playersLastStacks.find(v => v.seat === player.seat);
+
+            player.profit = targetPlayer.profit;
+        });
+    });
+
+};
+
 
 export default {
 
@@ -165,10 +205,14 @@ export default {
         const conclusions = createHistory.conclusion(lines, lastHistory);
         histories.push(...conclusions);
 
-        const hasAllin = histories.some(v => v.allIn);
+        tryFixShowCardsOnAllInMut(histories);
 
-        if (hasAllin) return fixShowCardsOnAllIn(histories);
-        else return histories;
+        const summmary = createHistory.summary(conclusions);
+        histories.push(...summmary);
+
+        addProfitMut(histories, players, conclusions);
+
+        return histories;
     },
 
     /**

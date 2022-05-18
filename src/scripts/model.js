@@ -9,6 +9,7 @@ import biz from "./units/biz";
 import fxnl from "./units/fxnl";
 import TextDecoder from '@/scripts/extra/text-encoder-text-decoder';
 import easeTranspiler from '@/scripts/eases/transpile/index';
+import enums from "./units/enums";
 
 export default class Model {
 
@@ -228,8 +229,6 @@ export default class Model {
 
         const match = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(|\t| )Round #/.exec(sessionLog);
 
-        console.log(match);
-
         if (match && match.index) {
 
             sessionLog = sessionLog.slice(match.index);
@@ -281,6 +280,8 @@ export default class Model {
 
     navigation(key) {
 
+        let handShifted = false;
+
         const shiftHand = value => {
 
             const source = this.fullOrFilteredHH;
@@ -288,7 +289,14 @@ export default class Model {
             const index = source.findIndex(v => v.index === this.tracker.hand);
 
             this.tracker.hand = source[index + value].index;
-            this.tracker.progress = 0;
+
+            const hand = this.handHistories[this.tracker.hand];
+            const maxProgress = hand.histories.length - 1;
+
+            const startPreflop = this.startPhase === enums.phase.preflop;
+            this.tracker.progress = startPreflop ? 0 : maxProgress;
+
+            handShifted = true;
         };
 
         const work = {
@@ -303,6 +311,10 @@ export default class Model {
                 const maxProgress = hand.histories.length - 1;
 
                 if (this.tracker.progress > maxProgress) {
+                    this.tracker.progress = 0;
+                }
+
+                if (this.tracker.progress === maxProgress) {
                     shiftHand(+1);
                 }
             },
@@ -315,8 +327,10 @@ export default class Model {
             history: this.getHistory(),
             enables: this.getNavigationEnables(),
 
-            // Apenas usado no handler do nextAction
-            next: this.tracker.progress === 0 ? 'nextHand' : 'nextAction'
+            // NOTE:: Apenas usado no handler do nextAction
+            next: handShifted ? 'nextHand' : 'nextAction',
+            // NOTE:: Para usar no chat, limpa o chat e faz add posts
+            kickoff: this.tracker.progress === 0
         };
     }
 
@@ -329,6 +343,75 @@ export default class Model {
             history: this.getHistory(),
             enables: this.getNavigationEnables(),
         };
+    }
+
+    navigationStreet(phase) {
+
+        const { histories } = this.handHistories[this.tracker.hand];
+
+        const progress = histories.findIndex(v => v.phase === phase);
+
+        this.tracker.progress = progress;
+
+        return this.getHistory();
+    }
+
+    makeChatArray(phase) {
+
+        const { histories } = this.handHistories[this.tracker.hand];
+
+        const progress = histories.findIndex(v => v.phase === phase);
+
+        // NOTE:: flatMap porque o primeiro item tem varios "posts" num array
+        const chat = histories
+            .filter((v, i) => i <= progress)
+            .map(v => v.line)
+            .flatMap(v => v);
+
+        return chat;
+    }
+
+    streetEnables() {
+
+        if (!this.handHistories.length) return {};
+
+        const { histories } = this.handHistories[this.tracker.hand];
+
+        return {
+            preflop: true,
+            flop: histories.some(v => v.phase === enums.phase.flop),
+            turn: histories.some(v => v.phase === enums.phase.turn),
+            river: histories.some(v => v.phase === enums.phase.river),
+            summary: true
+        };
+    }
+
+    streetPushed() {
+
+        if (!this.handHistories.length) return;
+
+        const { histories } = this.handHistories[this.tracker.hand];
+
+        const validPhases = [
+            enums.phase.preflop,
+            enums.phase.flop,
+            enums.phase.turn,
+            enums.phase.river,
+            enums.phase.summary,
+        ];
+
+        let pushed = '';
+
+        for (let [index, history] of Object.entries(histories)) {
+
+            if (history.phase && validPhases.includes(history.phase)) {
+
+                pushed = history.phase;
+            }
+
+            if (Number(index) === this.tracker.progress) return pushed;
+        }
+
     }
 
     getHistory() {
@@ -346,7 +429,8 @@ export default class Model {
 
         const lastHandIndex = rear(source).index;
 
-        const lastHandMaxProgress = rear(source).histories.length - 1;
+        // NOTE:: -2 desde que foi adicionado a "street navigarion" com summary
+        const lastHandMaxProgress = rear(source).histories.length - 2;
 
         const isLastHand = this.tracker.hand === lastHandIndex;
 
@@ -361,13 +445,6 @@ export default class Model {
             nextAction,
             nextHand: !isLastHand,
         }
-    }
-
-    getFirstHistory() {
-
-        const hand = head(this.handHistories);
-
-        return head(hand.histories);
     }
 
     get hero() {
@@ -434,5 +511,64 @@ export default class Model {
         if (head.startsWith('PokerStars ')) return 'PokerStars';
 
         if (head.startsWith('Poker Hand #')) return 'Natural8';
+    }
+
+    /**
+     * Formato: `{ riropo: { setting: { a:false; b:false } } }`
+     * 
+     * @param { {name:string; value: boolean} } field 
+     * @param { boolean } [retry=false] Tenta novamente em caso de erro
+     */
+    updateLocalStorageSettings(field, retry = false) {
+
+        const serialized = localStorage.getItem('riropo');
+
+        try {
+
+            const riropo = JSON.parse(serialized) ?? { settings: {} };
+
+            riropo.settings[field.name] = field.value;
+
+            localStorage.setItem('riropo', JSON.stringify(riropo));
+
+        } catch (err) {
+
+            console.error(err);
+
+            localStorage.removeItem('riropo');
+
+            if (retry) alert('The data was not updated');
+            else this.updateLocalStorageSettings(field, true);
+        }
+    }
+
+    /**
+     * 
+     * @returns { {startBySummary:boolean; showPlayersProfit: boolean } }
+     */
+    loadLocalStorageSettings() {
+
+        try {
+
+            const serialized = localStorage.getItem('riropo');
+
+            const { settings } = JSON.parse(serialized) ?? {};
+
+            return settings;
+
+        } catch (err) {
+
+            console.error(err);
+
+            localStorage.removeItem('riropo');
+        }
+    }
+
+    get startPhase() {
+
+        // NOTE:: default a `false`, `{... this..xxx }` não crasha em `undefined`
+        const { startBySummary = false } = { ... this.loadLocalStorageSettings() };
+
+        return startBySummary ? enums.phase.summary : enums.phase.preflop;
     }
 }

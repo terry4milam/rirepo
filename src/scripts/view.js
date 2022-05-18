@@ -9,6 +9,7 @@ import HandsList from "./controls/hand-list";
 import displayPositions from "./units/display-positions";
 import fns, { pointInRect } from "./units/fns";
 import CheckBox from "./controls/checkbox";
+import Container from "./controls/container";
 import Controller from "./controller";
 
 export default class View {
@@ -87,8 +88,12 @@ export default class View {
             searchHand: searchHandRect,
             clearHandFilter: clearRect,
             shareHand: shareHandRect,
-            fullWindowed: fullWindowedRect
-
+            fullWindowed: fullWindowedRect,
+            streetNavigation: streetNavigationRect,
+            settings: settingsRect,
+            startBySummary: startBySummaryRect,
+            showPlayersProfit: showPlayersProfitRect,
+            closeSettings: closeSettingsRect
         } = embeddedRects;
 
         this.openHH = new Button(this, openHHRect);
@@ -117,6 +122,28 @@ export default class View {
         this.shareHand = new Button(this, shareHandRect, { state: buttonStates.hidden });
 
         this.fullWindowed = new Button(this, fullWindowedRect);
+
+
+        this.preflopNav = new Button(this, streetNavigationRect.preflop, { state, switchTag: 'street-nav' });
+        this.flopNav = new Button(this, streetNavigationRect.flop, { state, switchTag: 'street-nav' });
+        this.turnNav = new Button(this, streetNavigationRect.turn, { state, switchTag: 'street-nav' });
+        this.riverNav = new Button(this, streetNavigationRect.river, { state, switchTag: 'street-nav' });
+        this.summaryNav = new Button(this, streetNavigationRect.summary, { state, switchTag: 'street-nav' });
+
+        this.settings = new Button(this, settingsRect, { state: buttonStates.normal })
+
+        const startBySummaryText = 'Start hand by summary';
+        this.startBySummary = new CheckBox(this, startBySummaryRect, startBySummaryText);
+
+        const showPlayersProfitText = 'Show players profit';
+        this.showPlayersProfit = new CheckBox(this, showPlayersProfitRect, showPlayersProfitText);
+
+        this.closeSettings = new Button(this, closeSettingsRect, { state: buttonStates.normal });
+
+        this.settingsContainer = new Container(this, chatRect, { visible: false });
+        this.settingsContainer.addChild(this.startBySummary);
+        this.settingsContainer.addChild(this.showPlayersProfit);
+        this.settingsContainer.addChild(this.closeSettings);
     }
 
     async setEmbeddedControlsImages() {
@@ -145,13 +172,27 @@ export default class View {
 
         await this.fullWindowed.setImages(this.images.fullWindowed, { row: 0 });
 
+        await this.preflopNav.setImages(this.images.streetNav, { row: 0 });
+        await this.flopNav.setImages(this.images.streetNav, { row: 1 });
+        await this.turnNav.setImages(this.images.streetNav, { row: 2 });
+        await this.riverNav.setImages(this.images.streetNav, { row: 3 });
+        await this.summaryNav.setImages(this.images.streetNav, { row: 4 });
+
+        await this.settings.setImages(this.images.settings, { row: 0 });
+
         this.showBigBlinds.setImage();
+
+        await this.settingsContainer.setImage(this.images.settingsContainer);
+        this.startBySummary.setImage();
+        this.showPlayersProfit.setImage();
+        await this.closeSettings.setImages(this.images.clearHandFilter, { row: 0 });
 
         this.resetScreen();
     }
 
     bindControls(handlers) {
 
+        window.addEventListener('keydown', handlers.windowKeydown);
         this.loadHH.addEventListener('change', handlers.loadHandHistory);
         this.canvas.addEventListener('mousemove', handlers.canvasMouseMove);
         this.canvas.addEventListener('mousedown', handlers.canvasMouseDown);
@@ -176,6 +217,15 @@ export default class View {
         this.clearHandsFilter.bind(handlers.clearHandsFilter);
         this.shareHand.bind(handlers.shareHand);
         this.fullWindowed.bind(handlers.fullWindowed);
+        this.preflopNav.bind(handlers.preflopNav);
+        this.flopNav.bind(handlers.flopNav);
+        this.turnNav.bind(handlers.turnNav);
+        this.riverNav.bind(handlers.riverNav);
+        this.summaryNav.bind(handlers.summaryNav);
+        this.settings.bind(handlers.settings);
+        this.startBySummary.bind(handlers.startBySummary);
+        this.showPlayersProfit.bind(handlers.showPlayersProfit);
+        this.closeSettings.bind(handlers.closeSettings);
     }
 
     setCallOffEmbeddedControls() {
@@ -251,23 +301,33 @@ export default class View {
     }
 
     /**
-     * @param {HistoryT} history 
-     * @param {string} navigation enums.navigation
+     * @param {object} obj
+     * @param {HistoryT} obj.HistoryT 
+     * @param {string} obj.navigation enums.navigation, `previousAction` ou `nextAction`
+     * @param {boolean} obj.kickoff Vem de `handlerNextAction_onClick()` quando o progress é 0
+     * @param {string[]} obj.chat Quando é "otherHand" ou "otherStret" clicada
      */
-    updateChat(history, navigation) {
+    updateChat({ history, navigation, kickoff, chat }) {
+
+        // * Todos os cenarios
+        // 1. chat -> "otherHand" ou "otherStret"
+        // 2. navigation (previousAction)
+        // 3. navigation (nextAction), history
+        // 4. navigation (nextAction), history, kickoff
+
+        const replacement = (value) => {
+
+            this.chat.removeAll();
+            this.chat.addRange(value);
+        };
+
+        if (chat) return replacement(chat);
+        if (kickoff) return replacement(history.line);
 
         const work = {
 
-            previousHand: () => {
-                this.chat.removeAll();
-                this.chat.addRange(history.line);
-            },
             previousAction: () => this.chat.remove(),
             nextAction: () => this.chat.add(history.line),
-            nextHand: () => {
-                this.chat.removeAll();
-                this.chat.addRange(history.line);
-            }
         };
 
         work[navigation].call();
@@ -323,6 +383,35 @@ export default class View {
             if (!(enable && isHover)) this[key].setState = state;
         });
 
+    }
+
+    updateStreetNavigationUI({ enables, pushed } = {}) {
+
+        if (enables) {
+
+            Object.entries(enables).forEach(([key, enable]) => {
+
+                const buttonName = `${key}Nav`;
+
+                const states = enums.buttonStates;
+
+                const isHover = this[buttonName].state === states.hover;
+
+                const state = enable ? states.normal : states.disabled;
+
+                if (!(enable && isHover)) this[buttonName].setState = state;
+            });
+        }
+
+        if (pushed) {
+
+            this.turnOffSwitchFeatButtons('street-nav');
+
+            const buttonName = `${pushed}Nav`;
+
+            this[buttonName].switchFeat.pushed = true;
+            this[buttonName].draw();
+        }
     }
 
     unpressScrollBars() {
@@ -451,6 +540,18 @@ export default class View {
         this.nextHand.setRect = keyRect.nextHand;
     }
 
+    toogleNavigationStreetKeysSize() {
+
+        const key = `streetNavigation${fns.isFullScreen() ? 'Mobile' : ''}`;
+
+        const { [key]: keyRect } = embeddedRects;
+        this.preflopNav.setRect = keyRect.preflop;
+        this.flopNav.setRect = keyRect.flop;
+        this.turnNav.setRect = keyRect.turn;
+        this.riverNav.setRect = keyRect.river;
+        this.summaryNav.setRect = keyRect.summary;
+    }
+
     async toogleFullWindowedImages() {
 
         const row = fns.isFullScreen() ? 1 : 0;
@@ -460,4 +561,42 @@ export default class View {
         this.fullWindowed.draw();
 
     }
+
+    showSettings() {
+
+        this.chat.visibility = false;
+        this.settingsContainer.visibility = true;
+    }
+
+    hideSettings() {
+
+        this.settingsContainer.visibility = false;
+        this.chat.visibility = true;
+    }
+
+
+    /**
+     * 
+     * @param {*} tag switch feature tag
+     * @param {*} [button] Todos exceto este 
+     */
+    turnOffSwitchFeatButtons(tag, button) {
+
+        const ctrls = this.embeddables.filter(v => v.switchFeat?.tag === tag);
+
+        ctrls.forEach(ctrl => {
+
+            if (ctrl === button) return;
+
+            ctrl.switchFeat.pushed = false;
+            ctrl.draw();
+        });
+    }
+
+    updateSettings(settings = {}) {
+
+        this.startBySummary.checked = settings.startBySummary;
+        this.showPlayersProfit.checked = settings.showPlayersProfit;
+    }
+
 }
