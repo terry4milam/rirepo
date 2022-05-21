@@ -527,8 +527,6 @@ export default {
 
         players.call(this, history, tableMax, displayValueAbsx);
 
-        action.call(this, history, tableMax);
-
         waitingToAct.call(this, history, tableMax, displayValueAbsx);
 
         streetCards.call(this, history.streetCards);
@@ -540,6 +538,8 @@ export default {
         easeMiddlePot.call(this, history, tableMax, displayValueAbsx);
 
         betChips.call(this, history.players, tableMax);
+
+        action.call(this, history, tableMax);
 
         middlePotValue.call(this, history, displayValueAbsx);
     }

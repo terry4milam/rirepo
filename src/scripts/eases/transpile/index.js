@@ -1,5 +1,6 @@
 import natural8 from './sites/natural8';
 import bills from './sites/bills';
+import billsV2 from './sites/bills-v2';
 
 export default {
 
@@ -22,7 +23,11 @@ export default {
         const searchPatternBills = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(|\t| )Round #/;
         if (searchPatternBills.test(log)) {
 
-            return bills(log, hero);
+            // NOTE:: Tem stacks actualizadas no fim de uma hand, mas não tem nome
+            const isV1 = /Seat \d: .+ \(.+ in chips\)$/gm.test(log);
+
+            if (isV1) return bills(log, hero);
+            else return billsV2(log, hero);
         }
 
         return log;
