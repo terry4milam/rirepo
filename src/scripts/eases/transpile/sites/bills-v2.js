@@ -130,7 +130,11 @@ const makePlayersStacks = lines => {
         // Seat 3 SB Caesar 
         const seatPositionName = line.slice(0, lastIndexOfStartParentheses);
 
-        const seatAndName = seatPositionName.replace(/(?<=Seat \d) \w+/, ':');
+        // NOTE:: Não posso usar só `\w` porque pode haver "UTG+1", etc
+        const seatAndName = seatPositionName.replace(/(?<=Seat \d) \w+|(\+\d)/g, (match) => {
+
+            return match.startsWith('+') ? '' : ':';
+        });
 
         const withFormatedStack = dirtyStack.replace(/,/g, '').replace('.00', '');
 
@@ -270,7 +274,7 @@ const makeHoleCards = (lines, seatsNames, hero) => {
 
         heroLine = withDealted.shift();
         heroLine = heroLine.replace('Dealted', 'Dealt');
-        alert('Random hero was provided');
+        // alert('Random hero was provided');
     }
 
     const nonHeroLines = withDealted.filter(v => v.startsWith('Dealted'));

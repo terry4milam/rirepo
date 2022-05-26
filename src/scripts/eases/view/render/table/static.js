@@ -78,7 +78,7 @@ const version = function () {
     this.context.font = '11px consolas';
 
     const brand = this.fromPostMessage ? '' : 'RIROPO ';
-    const text = `${brand} v0.12.1`;
+    const text = `${brand} v0.12.2`;
     // NOTE:: Complementado com `vue.config.js`
     // const text = process.env.VUE_APP_VERSION;
 

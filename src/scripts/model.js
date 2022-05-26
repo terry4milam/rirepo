@@ -234,7 +234,8 @@ export default class Model {
             sessionLog = sessionLog.slice(match.index);
         }
 
-        return sessionLog.trim();
+        // NOTE:: Replace de "non-breaking space", é o char ascii 160, parece ser dispensavel
+        return sessionLog.replace(/\xA0/g, ' ').trim();
     }
 
     /**

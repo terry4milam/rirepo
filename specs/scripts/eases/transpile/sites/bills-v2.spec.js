@@ -142,6 +142,52 @@ describe('ease-transpile-bills-v2', function () {
 
             assert.deepStrictEqual(fn(lines), anticipate);
         });
+
+
+        it('should return only players stacks lines fixed', function () {
+
+            const lines = [
+                `Round #21495433:  Holdem No Limit - 2022-05-23 08:48:00`,
+                `Holdem No Limit, SB:2.50 BB:5.00 Ante:0.00`,
+                `Table:200-750 םדלוה, 6-max Seat #6 is the dealer.`,
+                `Seat 7 SB LouisVitton (936.00 in chips)`,
+                `Seat 8 BB Barna5h (255.00 in chips)`,
+                `Seat 1 UTG solomon77 (560.07 in chips)`,
+                `Seat 2 UTG+1 edisanta (993.79 in chips)`,
+                `Seat 3 MP vivo47 (286.09 in chips)`,
+                `Seat 4 MP+1 PokerProfesr (938.92 in chips)`,
+                `Seat 5 CO Inbar (270.40 in chips)`,
+                `Seat 6 BTN Lolololo (525.00 in chips)`,
+                `Seat 7 posts small blind 2.50 allin:0`,
+                `Seat 8 posts big blind 5.00 allin:0`,
+                `*** HOLE CARDS ***`,
+                `Seat 7, SB`,
+                `Seat 6: Lolololo [Tc 7s] (dealer) Folded on the Pre Flop`,
+                `Seat 1:  (560.07 in chips)`,
+                `Seat 2:  (993.79 in chips)`,
+                `Seat 3:  (241.09 in chips)`,
+                `Seat 4:  (938.92 in chips)`,
+                `Seat 5:  (270.40 in chips)`,
+                `Seat 6:  (525.00 in chips)`,
+                `Seat 7:  (891.00 in chips)`,
+                `Seat 8:  (338.25 in chips)`,
+                `Seat 5: [Qh bb] allin:0`,
+            ];
+
+            const anticipate = [
+                `Seat 7: LouisVitton (936 in chips) `,
+                `Seat 8: Barna5h (255 in chips) `,
+                `Seat 1: solomon77 (560.07 in chips) `,
+                `Seat 2: edisanta (993.79 in chips) `,
+                `Seat 3: vivo47 (286.09 in chips) `,
+                `Seat 4: PokerProfesr (938.92 in chips) `,
+                `Seat 5: Inbar (270.40 in chips) `,
+                `Seat 6: Lolololo (525 in chips) `,
+            ];
+
+            assert.deepStrictEqual(fn(lines), anticipate);
+        });
+
     });
 
     describe('# makePosts', function () {
@@ -281,7 +327,7 @@ describe('ease-transpile-bills-v2', function () {
             assert.deepStrictEqual(fn(lines, seatsNames), anticipate);
         });
 
-        
+
         it('should return only activity lines fixed and streets', function () {
 
             const lines = [

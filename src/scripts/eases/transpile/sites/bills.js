@@ -262,7 +262,7 @@ const makeHoleCards = (lines, seatsNames, hero) => {
 
         heroLine = withDealted.shift();
         heroLine = heroLine.replace('Dealted', 'Dealt');
-        alert('Random hero was provided');
+        // alert('Random hero was provided');
     }
 
     const nonHeroLines = withDealted.filter(v => v.startsWith('Dealted'));
